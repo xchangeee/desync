@@ -66,8 +66,6 @@ desync init -force            # overwrite existing file
 
 TTL values equal to the default (3600) are omitted from the output to keep the file readable.
 
----
-
 ### `plan`
 
 Shows what changes would be made without touching anything.
@@ -94,8 +92,6 @@ RRsets:
 Plan: 1 to create, 1 to update, 1 to delete.
 ```
 
----
-
 ### `apply`
 
 Runs `plan`, then prompts for confirmation before making any API calls.
@@ -106,8 +102,6 @@ desync apply -auto-approve    # skip confirmation (useful in CI)
 desync apply -f prod.json
 desync apply -f -             # read state from stdin
 ```
-
----
 
 ### `tokens list`
 
@@ -126,8 +120,6 @@ Policies for ci-deploy (3a6b94b5-d20e-40bd-a7cc-521f5c79fab3):
   *            *        *     false
   example.com  *        *     true
 ```
-
----
 
 ### `tokens create`
 
@@ -158,60 +150,6 @@ The state file is JSON with two top-level keys. Both are optional — omit a sec
   "domains": [...]
 }
 ```
-
-### `tokenPolicies`
-
-Declares the complete desired policy set for one or more existing tokens. desync will create, update, and delete policies to exactly match what is listed. Tokens with no entry here are left untouched.
-
-Each entry references a token by its UUID (`tokenId`), which you can find with `desync tokens list`.
-
-```json
-"tokenPolicies": [
-  {
-    "tokenId": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
-    "policies": [
-      {"domain": null, "subname": null, "type": null, "permWrite": false},
-      {"domain": "example.com", "subname": null, "type": null, "permWrite": true}
-    ]
-  }
-]
-```
-
-#### Policy fields
-
-| Field | Type | Description |
-|---|---|---|
-| `domain` | string or `null` | Domain the policy applies to. `null` = default (wildcard). |
-| `subname` | string or `null` | Subname the policy applies to. `null` = all subnames. |
-| `type` | string or `null` | Record type the policy applies to. `null` = all types. |
-| `permWrite` | bool | Whether this token may write matching RRsets. |
-
-#### Policy matching
-
-The deSEC API uses longest-prefix matching on the `(domain, subname, type)` triple, where `null` acts as a wildcard at each position. A common pattern is a restrictive default policy plus specific allow rules:
-
-```json
-"policies": [
-  {"domain": null,         "subname": null, "type": null, "permWrite": false},
-  {"domain": "example.com","subname": null, "type": null, "permWrite": true}
-]
-```
-
-This denies write access everywhere by default, then allows writing all records in `example.com`.
-
-To allow only a single record type (e.g. for a dynDNS token):
-
-```json
-"policies": [
-  {"domain": null,          "subname": null, "type": null, "permWrite": false},
-  {"domain": "example.com", "subname": null, "type": "A",  "permWrite": true},
-  {"domain": "example.com", "subname": null, "type": "AAAA","permWrite": true}
-]
-```
-
-> The default policy (`domain`, `subname`, and `type` all `null`) must always be present when any specific policies exist — the API enforces this. desync handles the required creation/deletion ordering automatically.
-
----
 
 ### `domains`
 
@@ -263,6 +201,69 @@ Domains not listed here are left completely untouched.
 ```
 
 > Record values that include a trailing dot (CNAME, MX, NS targets) **must** include the dot. TXT record values **must** be wrapped in escaped double quotes.
+
+### `tokenPolicies`
+
+Declares the complete desired policy set for one or more existing tokens. desync will create, update, and delete policies to exactly match what is listed. Tokens with no entry here are left untouched.
+
+Each entry references a token by its UUID (`tokenId`), which you can find with `desync tokens list`.
+
+```json
+"tokenPolicies": [
+  {
+    "tokenId": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
+    "policies": [
+      {"domain": null, "subname": null, "type": null, "permWrite": false},
+      {"domain": "example.com", "subname": null, "type": null, "permWrite": true}
+    ]
+  }
+]
+```
+
+#### Policy fields
+
+| Field | Type | Description |
+|---|---|---|
+| `domain` | string or `null` | Domain the policy applies to. `null` = default (wildcard). |
+| `subname` | string or `null` | Subname the policy applies to. `null` = all subnames. |
+| `type` | string or `null` | Record type the policy applies to. `null` = all types. |
+| `permWrite` | bool | Whether this token may write matching RRsets. |
+
+#### Policy matching
+
+The deSEC API uses longest-prefix matching on the `(domain, subname, type)` triple, where `null` acts as a wildcard at each position.
+
+The **default policy** is the entry where `domain`, `subname`, and `type` are all `null`. It acts as a catch-all for anything not matched by a more specific rule. The API requires it to be present whenever any other policies exist — desync handles the required creation/deletion ordering automatically.
+
+Set the default policy's `permWrite` to `false` for a restrictive baseline (deny all, then allow specific domains), or `true` if the token should have broad write access and you only need to carve out exceptions.
+
+Restrictive baseline — deny everywhere, allow one domain:
+
+```json
+"policies": [
+  {"domain": null,         "subname": null, "type": null, "permWrite": false},
+  {"domain": "example.com","subname": null, "type": null, "permWrite": true}
+]
+```
+
+Permissive baseline — allow everywhere, restrict one domain:
+
+```json
+"policies": [
+  {"domain": null,         "subname": null, "type": null, "permWrite": true},
+  {"domain": "example.com","subname": null, "type": null, "permWrite": false}
+]
+```
+
+To allow only specific record types (e.g. for a dynDNS token):
+
+```json
+"policies": [
+  {"domain": null,          "subname": null, "type": null, "permWrite": false},
+  {"domain": "example.com", "subname": null, "type": "A",  "permWrite": true},
+  {"domain": "example.com", "subname": null, "type": "AAAA","permWrite": true}
+]
+```
 
 ## Rate limiting
 
