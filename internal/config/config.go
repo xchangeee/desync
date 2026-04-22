@@ -17,6 +17,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/spf13/afero"
 )
@@ -74,14 +75,17 @@ func Load(fs afero.Fs, path string) (*Config, error) {
 		return nil, err
 	}
 	defer f.Close()
+	return LoadReader(f, path)
+}
 
+// LoadReader parses a Config from r. name is used only in error messages.
+func LoadReader(r io.Reader, name string) (*Config, error) {
 	var cfg Config
-	dec := json.NewDecoder(f)
+	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&cfg); err != nil {
-		return nil, fmt.Errorf("parsing %s: %w", path, err)
+		return nil, fmt.Errorf("parsing %s: %w", name, err)
 	}
-
 	if err := validate(&cfg); err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}

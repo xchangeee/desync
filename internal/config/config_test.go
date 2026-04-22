@@ -1,12 +1,26 @@
 package config_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
 
 	"codeberg.org/xchangeee/desync/internal/config"
 )
+
+func TestLoadReader(t *testing.T) {
+	const src = `{"domains": [{"name": "x.de", "rrsets": [
+		{"subname": "", "type": "A", "records": ["1.1.1.1"]}
+	]}]}`
+	cfg, err := config.LoadReader(strings.NewReader(src), "<stdin>")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(cfg.Domains) != 1 || cfg.Domains[0].Name != "x.de" {
+		t.Fatalf("unexpected config: %+v", cfg)
+	}
+}
 
 // write puts content into an in-memory filesystem at path and returns the fs.
 func write(t *testing.T, path, content string) afero.Fs {

@@ -306,7 +306,15 @@ func setup(token, file string) (*api.Client, *config.Config, error) {
 	if token == "" {
 		return nil, nil, fmt.Errorf("API token required: use -token or set DESEC_TOKEN")
 	}
-	cfg, err := config.Load(afero.NewOsFs(), file)
+	var (
+		cfg *config.Config
+		err error
+	)
+	if file == "-" {
+		cfg, err = config.LoadReader(os.Stdin, "<stdin>")
+	} else {
+		cfg, err = config.Load(afero.NewOsFs(), file)
+	}
 	if err != nil {
 		return nil, nil, fmt.Errorf("loading %s: %w", file, err)
 	}
