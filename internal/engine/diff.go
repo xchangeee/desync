@@ -11,6 +11,13 @@ import (
 	"codeberg.org/xchangeee/desync/internal/config"
 )
 
+// managedByDesec lists record types controlled exclusively by deSEC that
+// desync must never attempt to create, update, or delete.
+var managedByDesec = map[string]bool{
+	"NS":  true,
+	"SOA": true,
+}
+
 // ChangeKind classifies a planned change.
 type ChangeKind int
 
@@ -193,7 +200,9 @@ func diffDomains(desired []config.Domain, client *api.Client) ([]DomainDiff, err
 		type rrKey struct{ subname, rrtype string }
 		curByKey := make(map[rrKey]api.RRset)
 		for _, r := range current {
-			curByKey[rrKey{r.Subname, r.Type}] = r
+			if !managedByDesec[r.Type] {
+				curByKey[rrKey{r.Subname, r.Type}] = r
+			}
 		}
 
 		desiredKeys := make(map[rrKey]bool)

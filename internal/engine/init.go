@@ -76,6 +76,9 @@ func fetchDomains(client *api.Client, cfg *config.Config) error {
 
 		dom := config.Domain{Name: d.Name}
 		for _, r := range rrsets {
+			if managedByDesec[r.Type] {
+				continue
+			}
 			ttl := r.TTL
 			if ttl == defaultTTL {
 				ttl = 0 // omitted from JSON; EffectiveTTL() restores the default

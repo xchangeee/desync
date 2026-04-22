@@ -115,6 +115,9 @@ func validate(cfg *Config) error {
 			if r.Type == "" {
 				return fmt.Errorf("rrset type must not be empty (domain %s subname %q)", d.Name, r.Subname)
 			}
+			if r.Type == "NS" || r.Type == "SOA" {
+				return fmt.Errorf("rrset type %s is managed by deSEC and cannot be declared in the state file (domain %s subname %q)", r.Type, d.Name, r.Subname)
+			}
 			if r.EffectiveTTL() <= 0 {
 				return fmt.Errorf("rrset ttl must be positive (domain %s %q %s)", d.Name, r.Subname, r.Type)
 			}
