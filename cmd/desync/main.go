@@ -21,17 +21,17 @@
 //	tokens create  Create a new token and print its secret (shown only once).
 //
 // The tokens subcommands let you discover token IDs so that you can reference
-// them in the token_policies section of your state file.
+// them in the tokenPolicies section of your state file.
 //
 // Example state file (desync.json):
 //
 //	{
-//	  "token_policies": [
+//	  "tokenPolicies": [
 //	    {
-//	      "token_id": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
+//	      "tokenId": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
 //	      "policies": [
-//	        {"domain": null, "subname": null, "type": null, "perm_write": false},
-//	        {"domain": "example.com", "subname": null, "type": null, "perm_write": true}
+//	        {"domain": null, "subname": null, "type": null, "permWrite": false},
+//	        {"domain": "example.com", "subname": null, "type": null, "permWrite": true}
 //	      ]
 //	    }
 //	  ],
@@ -296,7 +296,7 @@ func runTokensCreate(token string, args []string) error {
 	fmt.Printf("  SECRET: %s\n", t.Secret)
 	fmt.Println()
 	fmt.Println("The secret is shown only once. Store it securely.")
-	fmt.Printf("Reference this token in your state file with token_id: %q\n", t.ID)
+	fmt.Printf("Reference this token in your state file with tokenId: %q\n", t.ID)
 	return nil
 }
 

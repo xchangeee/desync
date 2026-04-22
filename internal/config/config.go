@@ -2,7 +2,7 @@
 //
 // desync manages two resource types:
 //
-//   - token_policies: scoping policies on existing deSEC API tokens, referenced
+//   - tokenPolicies: scoping policies on existing deSEC API tokens, referenced
 //     by token UUID. desync fully reconciles the policy set for every listed
 //     token: policies in the file are created or updated, and policies that
 //     exist in the API but are absent from the file are deleted.
@@ -23,14 +23,14 @@ import (
 
 // Config is the top-level structure of a desync state file.
 type Config struct {
-	TokenPolicies []TokenPolicies `json:"token_policies"`
+	TokenPolicies []TokenPolicies `json:"tokenPolicies"`
 	Domains       []Domain        `json:"domains"`
 }
 
 // TokenPolicies declares the complete set of desired scoping policies for a
 // single token, identified by its UUID.
 type TokenPolicies struct {
-	TokenID  string   `json:"token_id"`
+	TokenID  string   `json:"tokenId"`
 	Policies []Policy `json:"policies"`
 }
 
@@ -40,7 +40,7 @@ type Policy struct {
 	Domain    *string `json:"domain"`
 	Subname   *string `json:"subname"`
 	Type      *string `json:"type"`
-	PermWrite bool    `json:"perm_write"`
+	PermWrite bool    `json:"permWrite"`
 }
 
 // Domain groups the desired RRsets for one DNS zone.
@@ -92,10 +92,10 @@ func validate(cfg *Config) error {
 	seenToken := make(map[string]bool)
 	for _, tp := range cfg.TokenPolicies {
 		if tp.TokenID == "" {
-			return fmt.Errorf("token_policies entry must have a non-empty token_id")
+			return fmt.Errorf("tokenPolicies entry must have a non-empty tokenId")
 		}
 		if seenToken[tp.TokenID] {
-			return fmt.Errorf("duplicate token_id %q in token_policies", tp.TokenID)
+			return fmt.Errorf("duplicate tokenId %q in tokenPolicies", tp.TokenID)
 		}
 		seenToken[tp.TokenID] = true
 	}

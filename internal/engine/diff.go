@@ -134,7 +134,7 @@ func diffTokenPolicies(desired []config.TokenPolicies, client Client) ([]TokenPo
 }
 
 // withImplicitDefault ensures the policy list always contains a default policy
-// (domain/subname/type all null, perm_write false). If the caller already
+// (domain/subname/type all null, permWrite false). If the caller already
 // declared one explicitly it is left unchanged; otherwise one is prepended so
 // that the deSEC API ordering constraint is always satisfied without requiring
 // the user to spell it out.
@@ -175,7 +175,7 @@ func planPolicies(desired []config.Policy, current []api.TokenPolicy) []PolicyDi
 				Domain:  dp.Domain,
 				Subname: dp.Subname,
 				Type:    dp.Type,
-				Diffs:   []FieldDiff{{Field: "perm_write", Current: "", Desired: fmt.Sprintf("%v", dp.PermWrite)}},
+				Diffs:   []FieldDiff{{Field: "permWrite", Current: "", Desired: fmt.Sprintf("%v", dp.PermWrite)}},
 			})
 		} else if cur.PermWrite != dp.PermWrite {
 			diffs = append(diffs, PolicyDiff{
@@ -184,7 +184,7 @@ func planPolicies(desired []config.Policy, current []api.TokenPolicy) []PolicyDi
 				Domain:    dp.Domain,
 				Subname:   dp.Subname,
 				Type:      dp.Type,
-				Diffs:     []FieldDiff{{Field: "perm_write", Current: fmt.Sprintf("%v", cur.PermWrite), Desired: fmt.Sprintf("%v", dp.PermWrite)}},
+				Diffs:     []FieldDiff{{Field: "permWrite", Current: fmt.Sprintf("%v", cur.PermWrite), Desired: fmt.Sprintf("%v", dp.PermWrite)}},
 			})
 		}
 	}

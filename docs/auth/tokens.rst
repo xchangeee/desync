@@ -60,8 +60,8 @@ Field details:
     :Type: boolean
 
     When using this token to create a domain, automatically configure a
-    permissive scoping policy for it (``perm_write=true``).  Requires a
-    restrictive default policy (``perm_write=false``), which is created
+    permissive scoping policy for it (``permWrite=true``).  Requires a
+    restrictive default policy (``permWrite=false``), which is created
     automatically when setting this flag.  Cannot be set to true if a
     permissive default policy exists.  For details, see
     :ref:`token scoping policies`.
@@ -424,7 +424,7 @@ A JSON object representing a token policy has the following structure::
         "domain": "example.com",
         "subname": null,
         "type": null,
-        "perm_write": true
+        "permWrite": true
     }
 
 Field details:
@@ -454,7 +454,7 @@ Field details:
 
     Record type to which the policy applies.  ``null`` for the default policy.
 
-``perm_write``
+``permWrite``
     :Access mode: read, write
     :Type: boolean
 
@@ -488,7 +488,7 @@ To create the default policy, send a ``POST`` request like::
         --header "Content-Type: application/json" --data @- <<< \
         '{"domain": null, "subname": null, "type": null}'
 
-This will create a default policy.  If the ``perm_write`` permission flag is
+This will create a default policy.  If the ``permWrite`` permission flag is
 not given, it is assumed to be ``false``.
 
 As an example, let's create a policy that only allows manipulating all A
@@ -497,7 +497,7 @@ records for a specific domain::
     curl https://desec.io/api/v1/auth/tokens/{id}/policies/rrsets/ \
         --header "Authorization: Token mu4W4MHuSc0Hy-GD1h_dnKuZBond" \
         --header "Content-Type: application/json" --data @- <<< \
-        '{"domain": "example.dedyn.io", "subname": null, "type": "A", "perm_write": true}'
+        '{"domain": "example.dedyn.io", "subname": null, "type": "A", "permWrite": true}'
 
 **Tip:** To authorize dual-stack dynDNS updates, create two policies (for
 access to the A and AAAA RRsets, respectively).
@@ -539,7 +539,7 @@ share any secrets with Bob. (Bob can use his own secret token.)
 Override tokens can access any domains in the target account, unless the token
 has at least one policy configured.
 In this case, visibility is restricted to domains for which a policy exists.
-(This implies read permissions for domains listed with ``perm_write: false``.)
+(This implies read permissions for domains listed with ``permWrite: false``.)
 
 This feature is particularly useful when combined with the
 ``perm_create_domain`` and ``perm_delete_domain`` permissions, as well as the

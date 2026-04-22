@@ -40,7 +40,7 @@ func TestFetchState_TokensWithoutPoliciesSkipped(t *testing.T) {
 
 func TestFetchState_NSAndSOAFiltered(t *testing.T) {
 	stub := &stubClient{
-		listTokensFn:  func() ([]api.Token, error) { return nil, nil },
+		listTokensFn: func() ([]api.Token, error) { return nil, nil },
 		listDomainsFn: func() ([]api.Domain, error) {
 			return []api.Domain{{Name: "example.com"}}, nil
 		},
@@ -71,7 +71,7 @@ func TestFetchState_NSAndSOAFiltered(t *testing.T) {
 
 func TestFetchState_TTL3600WrittenAsZero(t *testing.T) {
 	stub := &stubClient{
-		listTokensFn:  func() ([]api.Token, error) { return nil, nil },
+		listTokensFn: func() ([]api.Token, error) { return nil, nil },
 		listDomainsFn: func() ([]api.Domain, error) {
 			return []api.Domain{{Name: "example.com"}}, nil
 		},
@@ -97,7 +97,7 @@ func TestFetchState_TTL3600WrittenAsZero(t *testing.T) {
 
 func TestFetchState_NonDefaultTTLPreserved(t *testing.T) {
 	stub := &stubClient{
-		listTokensFn:  func() ([]api.Token, error) { return nil, nil },
+		listTokensFn: func() ([]api.Token, error) { return nil, nil },
 		listDomainsFn: func() ([]api.Domain, error) {
 			return []api.Domain{{Name: "example.com"}}, nil
 		},
@@ -141,7 +141,7 @@ func TestFetchState_PoliciesMappedCorrectly(t *testing.T) {
 	}
 	tp := cfg.TokenPolicies[0]
 	if tp.TokenID != "t1" {
-		t.Errorf("want token_id t1, got %s", tp.TokenID)
+		t.Errorf("want tokenId t1, got %s", tp.TokenID)
 	}
 	if len(tp.Policies) != 2 {
 		t.Fatalf("want 2 policies, got %d", len(tp.Policies))
@@ -150,6 +150,6 @@ func TestFetchState_PoliciesMappedCorrectly(t *testing.T) {
 		t.Errorf("want second policy domain %s, got %v", dom, tp.Policies[1].Domain)
 	}
 	if !tp.Policies[1].PermWrite {
-		t.Error("want perm_write true on specific policy")
+		t.Error("want permWrite true on specific policy")
 	}
 }

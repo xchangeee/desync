@@ -71,7 +71,7 @@ func printPolicyLine(indent string, p PolicyDiff) {
 	label := fmt.Sprintf("{domain=%s subname=%s type=%s}", ptrStr(p.Domain), ptrStr(p.Subname), ptrStr(p.Type))
 	switch p.Kind {
 	case ChangeCreate:
-		fmt.Printf("%s%s+ create policy %s perm_write=%s%s\n",
+		fmt.Printf("%s%s+ create policy %s permWrite=%s%s\n",
 			indent, colorGreen, label, p.Diffs[0].Desired, colorReset)
 	case ChangeUpdate:
 		fmt.Printf("%s%s~ update policy %s%s\n", indent, colorYellow, label, colorReset)

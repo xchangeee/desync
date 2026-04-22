@@ -109,7 +109,7 @@ desync apply -f prod.json
 
 ### `tokens list`
 
-Lists all tokens in your account with their UUIDs. Use this to find the `token_id` to reference in your state file.
+Lists all tokens in your account with their UUIDs. Use this to find the `tokenId` to reference in your state file.
 
 ```sh
 desync tokens list
@@ -138,7 +138,7 @@ Token created.
   SECRET: 4pnk7u-NHvrEkFzrhFDRTjGFyX_S
 
 The secret is shown only once. Store it securely.
-Reference this token in your state file with token_id: "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3"
+Reference this token in your state file with tokenId: "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3"
 ```
 
 ## State file reference
@@ -147,24 +147,24 @@ The state file is JSON with two top-level keys. Both are optional — omit a sec
 
 ```json
 {
-  "token_policies": [...],
+  "tokenPolicies": [...],
   "domains": [...]
 }
 ```
 
-### `token_policies`
+### `tokenPolicies`
 
 Declares the complete desired policy set for one or more existing tokens. desync will create, update, and delete policies to exactly match what is listed. Tokens with no entry here are left untouched.
 
-Each entry references a token by its UUID (`token_id`), which you can find with `desync tokens list`.
+Each entry references a token by its UUID (`tokenId`), which you can find with `desync tokens list`.
 
 ```json
-"token_policies": [
+"tokenPolicies": [
   {
-    "token_id": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
+    "tokenId": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
     "policies": [
-      {"domain": null, "subname": null, "type": null, "perm_write": false},
-      {"domain": "example.com", "subname": null, "type": null, "perm_write": true}
+      {"domain": null, "subname": null, "type": null, "permWrite": false},
+      {"domain": "example.com", "subname": null, "type": null, "permWrite": true}
     ]
   }
 ]
@@ -177,7 +177,7 @@ Each entry references a token by its UUID (`token_id`), which you can find with 
 | `domain` | string or `null` | Domain the policy applies to. `null` = default (wildcard). |
 | `subname` | string or `null` | Subname the policy applies to. `null` = all subnames. |
 | `type` | string or `null` | Record type the policy applies to. `null` = all types. |
-| `perm_write` | bool | Whether this token may write matching RRsets. |
+| `permWrite` | bool | Whether this token may write matching RRsets. |
 
 #### Policy matching
 
@@ -185,8 +185,8 @@ The deSEC API uses longest-prefix matching on the `(domain, subname, type)` trip
 
 ```json
 "policies": [
-  {"domain": null,         "subname": null, "type": null, "perm_write": false},
-  {"domain": "example.com","subname": null, "type": null, "perm_write": true}
+  {"domain": null,         "subname": null, "type": null, "permWrite": false},
+  {"domain": "example.com","subname": null, "type": null, "permWrite": true}
 ]
 ```
 
@@ -196,9 +196,9 @@ To allow only a single record type (e.g. for a dynDNS token):
 
 ```json
 "policies": [
-  {"domain": null,          "subname": null, "type": null, "perm_write": false},
-  {"domain": "example.com", "subname": null, "type": "A",  "perm_write": true},
-  {"domain": "example.com", "subname": null, "type": "AAAA","perm_write": true}
+  {"domain": null,          "subname": null, "type": null, "permWrite": false},
+  {"domain": "example.com", "subname": null, "type": "A",  "permWrite": true},
+  {"domain": "example.com", "subname": null, "type": "AAAA","permWrite": true}
 ]
 ```
 
@@ -265,13 +265,13 @@ The deSEC API applies rate limits per account. desync handles `429 Too Many Requ
 
 ```json
 {
-  "token_policies": [
+  "tokenPolicies": [
     {
-      "token_id": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
+      "tokenId": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
       "policies": [
-        {"domain": null,          "subname": null, "type": null, "perm_write": false},
-        {"domain": "example.com", "subname": null, "type": null, "perm_write": true},
-        {"domain": "example.org", "subname": null, "type": null, "perm_write": true}
+        {"domain": null,          "subname": null, "type": null, "permWrite": false},
+        {"domain": "example.com", "subname": null, "type": null, "permWrite": true},
+        {"domain": "example.org", "subname": null, "type": null, "permWrite": true}
       ]
     }
   ],

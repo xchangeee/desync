@@ -21,12 +21,12 @@ func write(t *testing.T, path, content string) afero.Fs {
 func TestLoad_HappyPath(t *testing.T) {
 	domain := "example.com"
 	fs := write(t, "state.json", `{
-		"token_policies": [
+		"tokenPolicies": [
 			{
-				"token_id": "aaaaaaaa-0000-0000-0000-000000000001",
+				"tokenId": "aaaaaaaa-0000-0000-0000-000000000001",
 				"policies": [
-					{"domain": null, "subname": null, "type": null, "perm_write": false},
-					{"domain": "example.com", "subname": null, "type": null, "perm_write": true}
+					{"domain": null, "subname": null, "type": null, "permWrite": false},
+					{"domain": "example.com", "subname": null, "type": null, "permWrite": true}
 				]
 			}
 		],
@@ -134,14 +134,14 @@ func TestLoad_DuplicateRRset(t *testing.T) {
 
 func TestLoad_DuplicateTokenID(t *testing.T) {
 	fs := write(t, "s.json", `{
-		"token_policies": [
-			{"token_id": "aaaa", "policies": []},
-			{"token_id": "aaaa", "policies": []}
+		"tokenPolicies": [
+			{"tokenId": "aaaa", "policies": []},
+			{"tokenId": "aaaa", "policies": []}
 		]
 	}`)
 	_, err := config.Load(fs, "s.json")
 	if err == nil {
-		t.Fatal("expected error for duplicate token_id")
+		t.Fatal("expected error for duplicate tokenId")
 	}
 }
 
