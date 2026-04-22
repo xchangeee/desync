@@ -35,10 +35,15 @@
 //	      ]
 //	    }
 //	  ],
-//	  "rrsets": [
-//	    {"domain": "example.com", "subname": "",    "type": "A",    "ttl": 3600, "records": ["1.2.3.4"]},
-//	    {"domain": "example.com", "subname": "www", "type": "A",    "ttl": 3600, "records": ["1.2.3.4"]},
-//	    {"domain": "example.com", "subname": "www", "type": "AAAA", "ttl": 3600, "records": ["2001:db8::1"]}
+//	  "domains": [
+//	    {
+//	      "name": "example.com",
+//	      "rrsets": [
+//	        {"subname": "",    "type": "A",    "records": ["1.2.3.4"]},
+//	        {"subname": "www", "type": "A",    "records": ["1.2.3.4"]},
+//	        {"subname": "www", "type": "AAAA", "ttl": 300, "records": ["2001:db8::1"]}
+//	      ]
+//	    }
 //	  ]
 //	}
 package main
@@ -130,8 +135,12 @@ func runInit(token, file string, args []string) error {
 		return fmt.Errorf("writing %s: %w", file, err)
 	}
 
-	fmt.Printf("Wrote %s (%d token policy groups, %d rrsets).\n",
-		file, len(cfg.TokenPolicies), len(cfg.RRsets))
+	nRRsets := 0
+	for _, d := range cfg.Domains {
+		nRRsets += len(d.RRsets)
+	}
+	fmt.Printf("Wrote %s (%d token policy groups, %d domains, %d rrsets).\n",
+		file, len(cfg.TokenPolicies), len(cfg.Domains), nRRsets)
 	return nil
 }
 

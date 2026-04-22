@@ -10,10 +10,9 @@ import (
 
 // Apply executes the changes described in d against the API.
 // Resources are processed in dependency order:
-//  1. Token policies (independent of RRsets)
+//  1. Token policies
 //  2. RRsets (bulk-patched per domain to minimise rate-limit consumption)
 func Apply(d *DiffResult, cfg *config.Config, client *api.Client) error {
-	// Build a lookup of desired policies by token ID.
 	desiredByToken := make(map[string][]config.Policy)
 	for _, tp := range cfg.TokenPolicies {
 		desiredByToken[tp.TokenID] = tp.Policies
@@ -28,14 +27,13 @@ func Apply(d *DiffResult, cfg *config.Config, client *api.Client) error {
 		}
 	}
 
-	// Build a lookup of desired RRsets by domain.
 	desiredRRsets := make(map[string][]config.RRset)
-	for _, r := range cfg.RRsets {
-		desiredRRsets[r.Domain] = append(desiredRRsets[r.Domain], r)
+	for _, dom := range cfg.Domains {
+		desiredRRsets[dom.Name] = dom.RRsets
 	}
 
-	for _, dr := range d.RRsets {
-		if err := applyRRsets(dr, client); err != nil {
+	for _, dd := range d.Domains {
+		if err := applyRRsets(dd, client); err != nil {
 			return err
 		}
 	}
@@ -55,8 +53,6 @@ func applyPolicies(tokenID string, diffs []PolicyDiff, desired []config.Policy, 
 		desiredByKey[key(p.Domain, p.Subname, p.Type)] = p
 	}
 
-	// Sort: creates before updates before deletes; within creates, default
-	// policy (all-null) comes first; within deletes, default policy comes last.
 	isDefault := func(p PolicyDiff) bool {
 		return p.Domain == nil && p.Subname == nil && p.Type == nil
 	}
@@ -76,7 +72,6 @@ func applyPolicies(tokenID string, diffs []PolicyDiff, desired []config.Policy, 
 		if pi.Kind != pj.Kind {
 			return kindRank(pi.Kind) < kindRank(pj.Kind)
 		}
-		// Same kind: default policy first on create, last on delete.
 		if pi.Kind == ChangeCreate {
 			return isDefault(pi) && !isDefault(pj)
 		}
@@ -121,32 +116,26 @@ func applyPolicies(tokenID string, diffs []PolicyDiff, desired []config.Policy, 
 }
 
 // applyRRsets sends a single bulk PATCH for all RRset changes on one domain.
-// Deletions are expressed as entries with an empty records list, per the API spec.
-func applyRRsets(dr DomainRRsetDiff, client *api.Client) error {
+func applyRRsets(dd DomainDiff, client *api.Client) error {
 	var items []api.RRsetWriteFields
 	creates, updates, deletes := 0, 0, 0
 
-	for _, ch := range dr.Changes {
+	for _, ch := range dd.Changes {
 		switch ch.Kind {
-		case ChangeCreate:
+		case ChangeCreate, ChangeUpdate:
 			creates++
+			if ch.Kind == ChangeUpdate {
+				creates--
+				updates++
+			}
 			items = append(items, api.RRsetWriteFields{
 				Subname: ch.Desired.Subname,
 				Type:    ch.Desired.Type,
-				TTL:     ch.Desired.TTL,
-				Records: ch.Desired.Records,
-			})
-		case ChangeUpdate:
-			updates++
-			items = append(items, api.RRsetWriteFields{
-				Subname: ch.Desired.Subname,
-				Type:    ch.Desired.Type,
-				TTL:     ch.Desired.TTL,
+				TTL:     ch.Desired.EffectiveTTL(),
 				Records: ch.Desired.Records,
 			})
 		case ChangeDelete:
 			deletes++
-			// Empty records array signals deletion in a bulk PATCH.
 			items = append(items, api.RRsetWriteFields{
 				Subname: ch.Subname,
 				Type:    ch.Type,
@@ -160,8 +149,8 @@ func applyRRsets(dr DomainRRsetDiff, client *api.Client) error {
 	}
 
 	fmt.Printf("Applying RRsets for %q (%d create, %d update, %d delete)...\n",
-		dr.Domain, creates, updates, deletes)
-	if err := client.BulkPatchRRsets(dr.Domain, items); err != nil {
+		dd.Domain, creates, updates, deletes)
+	if err := client.BulkPatchRRsets(dd.Domain, items); err != nil {
 		return err
 	}
 	fmt.Printf("  Done.\n")

@@ -30,11 +30,11 @@ func PrintPlan(d *DiffResult) {
 		fmt.Println()
 	}
 
-	if len(d.RRsets) > 0 {
+	if len(d.Domains) > 0 {
 		fmt.Println("RRsets:")
-		for _, dr := range d.RRsets {
-			fmt.Printf("  Domain %q:\n", dr.Domain)
-			for _, r := range dr.Changes {
+		for _, dd := range d.Domains {
+			fmt.Printf("  Domain %q:\n", dd.Domain)
+			for _, r := range dd.Changes {
 				hasChanges = true
 				subLabel := r.Subname
 				if subLabel == "" {
@@ -44,7 +44,7 @@ func PrintPlan(d *DiffResult) {
 				case ChangeCreate:
 					fmt.Printf("    %s+ create  %-24s %s%s\n", colorGreen, subLabel, r.Type, colorReset)
 					if r.Desired != nil {
-						fmt.Printf("              ttl=%d records=%s\n", r.Desired.TTL, joinStrs(r.Desired.Records))
+						fmt.Printf("              ttl=%d records=%s\n", r.Desired.EffectiveTTL(), joinStrs(r.Desired.Records))
 					}
 				case ChangeUpdate:
 					fmt.Printf("    %s~ update  %-24s %s%s\n", colorYellow, subLabel, r.Type, colorReset)

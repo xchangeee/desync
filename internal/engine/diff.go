@@ -52,8 +52,8 @@ type RRsetDiff struct {
 	Desired *config.RRset // nil when Kind == ChangeDelete
 }
 
-// DomainRRsetDiff groups all RRset changes for one domain.
-type DomainRRsetDiff struct {
+// DomainDiff groups all RRset changes for one domain.
+type DomainDiff struct {
 	Domain  string
 	Changes []RRsetDiff
 }
@@ -61,7 +61,7 @@ type DomainRRsetDiff struct {
 // DiffResult is the complete plan: what would change if Apply were run.
 type DiffResult struct {
 	TokenPolicies []TokenPoliciesDiff
-	RRsets        []DomainRRsetDiff
+	Domains       []DomainDiff
 }
 
 // Counts returns the total number of creates, updates, and deletes.
@@ -81,8 +81,8 @@ func (d *DiffResult) Counts() (create, update, del int) {
 			count(p.Kind)
 		}
 	}
-	for _, dr := range d.RRsets {
-		for _, r := range dr.Changes {
+	for _, dd := range d.Domains {
+		for _, r := range dd.Changes {
 			count(r.Kind)
 		}
 	}
@@ -100,11 +100,11 @@ func Diff(cfg *config.Config, client *api.Client) (*DiffResult, error) {
 	}
 	result.TokenPolicies = policyDiffs
 
-	rrsetDiffs, err := diffRRsets(cfg.RRsets, client)
+	domainDiffs, err := diffDomains(cfg.Domains, client)
 	if err != nil {
 		return nil, err
 	}
-	result.RRsets = rrsetDiffs
+	result.Domains = domainDiffs
 
 	return result, nil
 }
@@ -118,17 +118,14 @@ func diffTokenPolicies(desired []config.TokenPolicies, client *api.Client) ([]To
 		if err != nil {
 			return nil, fmt.Errorf("listing policies for token %s: %w", tp.TokenID, err)
 		}
-		policyDiffs := planPolicies(tp.Policies, current)
 		diffs = append(diffs, TokenPoliciesDiff{
 			TokenID:  tp.TokenID,
-			Policies: policyDiffs,
+			Policies: planPolicies(tp.Policies, current),
 		})
 	}
 	return diffs, nil
 }
 
-// planPolicies diffs the desired policy list against the current policies
-// fetched from the API, returning the changes needed to reconcile them.
 func planPolicies(desired []config.Policy, current []api.TokenPolicy) []PolicyDiff {
 	type policyKey struct{ domain, subname, ptype string }
 	key := func(d, s, t *string) policyKey {
@@ -167,10 +164,8 @@ func planPolicies(desired []config.Policy, current []api.TokenPolicy) []PolicyDi
 		}
 	}
 
-	// Policies present in the API but absent from desired → delete.
 	for _, cp := range current {
-		k := key(cp.Domain, cp.Subname, cp.Type)
-		if !desiredKeys[k] {
+		if !desiredKeys[key(cp.Domain, cp.Subname, cp.Type)] {
 			diffs = append(diffs, PolicyDiff{
 				Kind:      ChangeDelete,
 				CurrentID: cp.ID,
@@ -184,22 +179,13 @@ func planPolicies(desired []config.Policy, current []api.TokenPolicy) []PolicyDi
 	return diffs
 }
 
-// ---- rrsets ----------------------------------------------------------------
+// ---- domains / rrsets ------------------------------------------------------
 
-func diffRRsets(desired []config.RRset, client *api.Client) ([]DomainRRsetDiff, error) {
-	// Group desired rrsets by domain, preserving first-seen order.
-	byDomain := make(map[string][]config.RRset)
-	var domainOrder []string
-	for _, r := range desired {
-		if _, seen := byDomain[r.Domain]; !seen {
-			domainOrder = append(domainOrder, r.Domain)
-		}
-		byDomain[r.Domain] = append(byDomain[r.Domain], r)
-	}
+func diffDomains(desired []config.Domain, client *api.Client) ([]DomainDiff, error) {
+	var results []DomainDiff
 
-	var results []DomainRRsetDiff
-	for _, domain := range domainOrder {
-		current, err := client.ListRRsets(domain)
+	for _, d := range desired {
+		current, err := client.ListRRsets(d.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -213,10 +199,11 @@ func diffRRsets(desired []config.RRset, client *api.Client) ([]DomainRRsetDiff, 
 		desiredKeys := make(map[rrKey]bool)
 		var changes []RRsetDiff
 
-		for i := range byDomain[domain] {
-			dr := &byDomain[domain][i]
+		for i := range d.RRsets {
+			dr := &d.RRsets[i]
 			k := rrKey{dr.Subname, dr.Type}
 			desiredKeys[k] = true
+			wantTTL := dr.EffectiveTTL()
 
 			if cur, ok := curByKey[k]; !ok {
 				changes = append(changes, RRsetDiff{
@@ -227,11 +214,11 @@ func diffRRsets(desired []config.RRset, client *api.Client) ([]DomainRRsetDiff, 
 				})
 			} else {
 				var diffs []FieldDiff
-				if cur.TTL != dr.TTL {
+				if cur.TTL != wantTTL {
 					diffs = append(diffs, FieldDiff{
 						Field:   "ttl",
 						Current: fmt.Sprintf("%d", cur.TTL),
-						Desired: fmt.Sprintf("%d", dr.TTL),
+						Desired: fmt.Sprintf("%d", wantTTL),
 					})
 				}
 				if !strSlicesEqual(cur.Records, dr.Records) {
@@ -253,10 +240,8 @@ func diffRRsets(desired []config.RRset, client *api.Client) ([]DomainRRsetDiff, 
 			}
 		}
 
-		// RRsets present remotely but not in desired → delete.
 		for _, cr := range current {
-			k := rrKey{cr.Subname, cr.Type}
-			if !desiredKeys[k] {
+			if !desiredKeys[rrKey{cr.Subname, cr.Type}] {
 				changes = append(changes, RRsetDiff{
 					Kind:    ChangeDelete,
 					Subname: cr.Subname,
@@ -266,7 +251,7 @@ func diffRRsets(desired []config.RRset, client *api.Client) ([]DomainRRsetDiff, 
 		}
 
 		if len(changes) > 0 {
-			results = append(results, DomainRRsetDiff{Domain: domain, Changes: changes})
+			results = append(results, DomainDiff{Domain: d.Name, Changes: changes})
 		}
 	}
 
@@ -282,8 +267,6 @@ func ptrStr(s *string) string {
 	return *s
 }
 
-// strSlicesEqual returns true when both slices contain the same elements
-// (order-independent).
 func strSlicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
