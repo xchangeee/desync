@@ -42,7 +42,7 @@ type TokenPolicy struct {
 	Domain    *string `json:"domain"`
 	Subname   *string `json:"subname"`
 	Type      *string `json:"type"`
-	PermWrite bool    `json:"permWrite"`
+	PermWrite bool    `json:"perm_write"`
 }
 
 // TokenPolicyWriteFields contains the mutable fields of a TokenPolicy.
@@ -50,7 +50,7 @@ type TokenPolicyWriteFields struct {
 	Domain    *string `json:"domain"`
 	Subname   *string `json:"subname"`
 	Type      *string `json:"type"`
-	PermWrite bool    `json:"permWrite"`
+	PermWrite bool    `json:"perm_write"`
 }
 
 // Domain is the API representation of a deSEC DNS zone.
