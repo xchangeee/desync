@@ -17,7 +17,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+
+	"github.com/spf13/afero"
 )
 
 // Config is the top-level structure of a desync state file.
@@ -66,9 +67,9 @@ func (r RRset) EffectiveTTL() int {
 	return r.TTL
 }
 
-// Load reads and parses the JSON state file at path.
-func Load(path string) (*Config, error) {
-	f, err := os.Open(path)
+// Load reads and parses the JSON state file at path from the given filesystem.
+func Load(fs afero.Fs, path string) (*Config, error) {
+	f, err := fs.Open(path)
 	if err != nil {
 		return nil, err
 	}

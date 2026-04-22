@@ -98,7 +98,7 @@ func (d *DiffResult) Counts() (create, update, del int) {
 
 // Diff fetches the current remote state from the API and computes the full
 // diff against the desired state in cfg. It does not modify anything.
-func Diff(cfg *config.Config, client *api.Client) (*DiffResult, error) {
+func Diff(cfg *config.Config, client Client) (*DiffResult, error) {
 	result := &DiffResult{}
 
 	policyDiffs, err := diffTokenPolicies(cfg.TokenPolicies, client)
@@ -118,7 +118,7 @@ func Diff(cfg *config.Config, client *api.Client) (*DiffResult, error) {
 
 // ---- token policies --------------------------------------------------------
 
-func diffTokenPolicies(desired []config.TokenPolicies, client *api.Client) ([]TokenPoliciesDiff, error) {
+func diffTokenPolicies(desired []config.TokenPolicies, client Client) ([]TokenPoliciesDiff, error) {
 	var diffs []TokenPoliciesDiff
 	for _, tp := range desired {
 		current, err := client.ListPolicies(tp.TokenID)
@@ -206,7 +206,7 @@ func planPolicies(desired []config.Policy, current []api.TokenPolicy) []PolicyDi
 
 // ---- domains / rrsets ------------------------------------------------------
 
-func diffDomains(desired []config.Domain, client *api.Client) ([]DomainDiff, error) {
+func diffDomains(desired []config.Domain, client Client) ([]DomainDiff, error) {
 	var results []DomainDiff
 
 	for _, d := range desired {

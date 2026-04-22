@@ -3,7 +3,6 @@ package engine
 import (
 	"fmt"
 
-	"codeberg.org/xchangeee/desync/internal/api"
 	"codeberg.org/xchangeee/desync/internal/config"
 )
 
@@ -19,7 +18,7 @@ const defaultTTL = 3600
 // RRsets: every domain is included with all its RRsets nested inside.
 // TTL values equal to the default (3600) are zeroed so they are omitted from
 // the JSON output, keeping the file concise.
-func FetchState(client *api.Client) (*config.Config, error) {
+func FetchState(client Client) (*config.Config, error) {
 	cfg := &config.Config{}
 
 	if err := fetchTokenPolicies(client, cfg); err != nil {
@@ -32,7 +31,7 @@ func FetchState(client *api.Client) (*config.Config, error) {
 	return cfg, nil
 }
 
-func fetchTokenPolicies(client *api.Client, cfg *config.Config) error {
+func fetchTokenPolicies(client Client, cfg *config.Config) error {
 	tokens, err := client.ListTokens()
 	if err != nil {
 		return fmt.Errorf("listing tokens: %w", err)
@@ -62,7 +61,7 @@ func fetchTokenPolicies(client *api.Client, cfg *config.Config) error {
 	return nil
 }
 
-func fetchDomains(client *api.Client, cfg *config.Config) error {
+func fetchDomains(client Client, cfg *config.Config) error {
 	domains, err := client.ListDomains()
 	if err != nil {
 		return fmt.Errorf("listing domains: %w", err)

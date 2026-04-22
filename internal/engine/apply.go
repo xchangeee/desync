@@ -11,7 +11,7 @@ import (
 // Resources are processed in dependency order:
 //  1. Token policies
 //  2. RRsets (bulk-patched per domain to minimise rate-limit consumption)
-func Apply(d *DiffResult, cfg *config.Config, client *api.Client) error {
+func Apply(d *DiffResult, cfg *config.Config, client Client) error {
 	desiredByToken := make(map[string][]config.Policy)
 	for _, tp := range cfg.TokenPolicies {
 		desiredByToken[tp.TokenID] = tp.Policies
@@ -43,7 +43,7 @@ func Apply(d *DiffResult, cfg *config.Config, client *api.Client) error {
 // applyPolicies reconciles policies on a token.
 // The deSEC API requires the default policy (all-null key) to be created
 // before any specific policy, and deleted last. We sort accordingly.
-func applyPolicies(tokenID string, diffs []PolicyDiff, desired []config.Policy, client *api.Client) error {
+func applyPolicies(tokenID string, diffs []PolicyDiff, desired []config.Policy, client Client) error {
 	type policyKey struct{ domain, subname, ptype string }
 	key := func(d, s, t *string) policyKey { return policyKey{ptrStr(d), ptrStr(s), ptrStr(t)} }
 
@@ -127,7 +127,7 @@ func applyPolicies(tokenID string, diffs []PolicyDiff, desired []config.Policy, 
 }
 
 // applyRRsets sends a single bulk PATCH for all RRset changes on one domain.
-func applyRRsets(dd DomainDiff, client *api.Client) error {
+func applyRRsets(dd DomainDiff, client Client) error {
 	var items []api.RRsetWriteFields
 	creates, updates, deletes := 0, 0, 0
 

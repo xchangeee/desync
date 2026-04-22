@@ -57,6 +57,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/spf13/afero"
+
 	"codeberg.org/xchangeee/desync/internal/api"
 	"codeberg.org/xchangeee/desync/internal/config"
 	"codeberg.org/xchangeee/desync/internal/engine"
@@ -304,7 +306,7 @@ func setup(token, file string) (*api.Client, *config.Config, error) {
 	if token == "" {
 		return nil, nil, fmt.Errorf("API token required: use -token or set DESEC_TOKEN")
 	}
-	cfg, err := config.Load(file)
+	cfg, err := config.Load(afero.NewOsFs(), file)
 	if err != nil {
 		return nil, nil, fmt.Errorf("loading %s: %w", file, err)
 	}
