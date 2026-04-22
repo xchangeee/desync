@@ -259,7 +259,38 @@ func runTokensList(token string, args []string) error {
 			t.ID, t.Name, t.Created, lastUsed, t.IsValid,
 			t.PermCreateDomain, t.PermDeleteDomain, t.PermManageTokens)
 	}
-	return w.Flush()
+	w.Flush()
+
+	for _, t := range tokens {
+		policies, err := client.ListPolicies(t.ID)
+		if err != nil {
+			return err
+		}
+		if len(policies) == 0 {
+			continue
+		}
+		label := t.Name
+		if label == "" {
+			label = t.ID
+		}
+		fmt.Printf("\nPolicies for %s (%s):\n", label, t.ID)
+		pw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(pw, "  DOMAIN\tSUBNAME\tTYPE\tPERM_WRITE")
+		for _, p := range policies {
+			fmt.Fprintf(pw, "  %s\t%s\t%s\t%v\n",
+				policyField(p.Domain), policyField(p.Subname), policyField(p.Type), p.PermWrite)
+		}
+		pw.Flush()
+	}
+	return nil
+}
+
+// policyField formats a nullable policy field, rendering nil as "*" (wildcard).
+func policyField(s *string) string {
+	if s == nil {
+		return "*"
+	}
+	return *s
 }
 
 func runTokensCreate(token string, args []string) error {
