@@ -8,10 +8,10 @@ Define your desired state in a JSON file, then use `plan` to preview changes and
 
 | Resource | Behaviour |
 |---|---|
-| **Token policies** | Fully reconciled per token: creates, updates, and deletes policies to exactly match the file. |
+| Domains | Not managed — create them via the deSEC web UI. desync only manages the records inside them. |
 | **RRsets** | Fully reconciled per domain: creates, updates, and deletes records to exactly match the file. All changes for a domain are sent as a single bulk request to minimise rate-limit consumption. |
 | Tokens | Not managed — secrets are shown only once at creation time. Use `tokens list` / `tokens create` to provision tokens and discover their IDs. |
-| Domains | Not managed — create them via the deSEC web UI. desync only manages the records inside them. |
+| **Token policies** | Fully reconciled per token: creates, updates, and deletes policies to exactly match the file. |
 
 ## Installation
 
@@ -146,8 +146,8 @@ The state file is JSON with two top-level keys. Both are optional — omit a sec
 
 ```json
 {
-  "tokenPolicies": [...],
-  "domains": [...]
+  "domains": [...],
+  "tokenPolicies": [...]
 }
 ```
 
@@ -213,7 +213,6 @@ Each entry references a token by its UUID (`tokenId`), which you can find with `
   {
     "tokenId": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
     "policies": [
-      {"domain": null, "subname": null, "type": null, "permWrite": false},
       {"domain": "example.com", "subname": null, "type": null, "permWrite": true}
     ]
   }
@@ -224,7 +223,7 @@ Each entry references a token by its UUID (`tokenId`), which you can find with `
 
 | Field | Type | Description |
 |---|---|---|
-| `domain` | string or `null` | Domain the policy applies to. `null` = default (wildcard). |
+| `domain` | string or `null` | Domain the policy applies to. `null` = wildcard (matches all). |
 | `subname` | string or `null` | Subname the policy applies to. `null` = all subnames. |
 | `type` | string or `null` | Record type the policy applies to. `null` = all types. |
 | `permWrite` | bool | Whether this token may write matching RRsets. |
@@ -233,35 +232,31 @@ Each entry references a token by its UUID (`tokenId`), which you can find with `
 
 The deSEC API uses longest-prefix matching on the `(domain, subname, type)` triple, where `null` acts as a wildcard at each position.
 
-The **default policy** is the entry where `domain`, `subname`, and `type` are all `null`. It acts as a catch-all for anything not matched by a more specific rule. The API requires it to be present whenever any other policies exist — desync handles the required creation/deletion ordering automatically.
+The **default policy** (`domain`, `subname`, and `type` all `null`) is the catch-all for anything not matched by a more specific rule. desync automatically inserts a default policy with `permWrite: false` if you don't declare one, so you only need to include it explicitly when you want `permWrite: true`.
 
-Set the default policy's `permWrite` to `false` for a restrictive baseline (deny all, then allow specific domains), or `true` if the token should have broad write access and you only need to carve out exceptions.
-
-Restrictive baseline — deny everywhere, allow one domain:
+Deny everywhere by default, allow one domain (default policy implicit):
 
 ```json
 "policies": [
-  {"domain": null,         "subname": null, "type": null, "permWrite": false},
-  {"domain": "example.com","subname": null, "type": null, "permWrite": true}
+  {"domain": "example.com", "subname": null, "type": null, "permWrite": true}
 ]
 ```
 
-Permissive baseline — allow everywhere, restrict one domain:
+Allow everywhere by default, restrict one domain:
 
 ```json
 "policies": [
-  {"domain": null,         "subname": null, "type": null, "permWrite": true},
-  {"domain": "example.com","subname": null, "type": null, "permWrite": false}
+  {"domain": null,          "subname": null, "type": null, "permWrite": true},
+  {"domain": "example.com", "subname": null, "type": null, "permWrite": false}
 ]
 ```
 
-To allow only specific record types (e.g. for a dynDNS token):
+Allow only specific record types (e.g. dynDNS token):
 
 ```json
 "policies": [
-  {"domain": null,          "subname": null, "type": null, "permWrite": false},
-  {"domain": "example.com", "subname": null, "type": "A",  "permWrite": true},
-  {"domain": "example.com", "subname": null, "type": "AAAA","permWrite": true}
+  {"domain": "example.com", "subname": null, "type": "A",    "permWrite": true},
+  {"domain": "example.com", "subname": null, "type": "AAAA", "permWrite": true}
 ]
 ```
 
@@ -273,16 +268,6 @@ The deSEC API applies rate limits per account. desync handles `429 Too Many Requ
 
 ```json
 {
-  "tokenPolicies": [
-    {
-      "tokenId": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
-      "policies": [
-        {"domain": null,          "subname": null, "type": null, "permWrite": false},
-        {"domain": "example.com", "subname": null, "type": null, "permWrite": true},
-        {"domain": "example.org", "subname": null, "type": null, "permWrite": true}
-      ]
-    }
-  ],
   "domains": [
     {
       "name": "example.com",
@@ -301,6 +286,15 @@ The deSEC API applies rate limits per account. desync handles `429 Too Many Requ
       "name": "example.org",
       "rrsets": [
         {"subname": "", "type": "A", "records": ["1.2.3.4"]}
+      ]
+    }
+  ],
+  "tokenPolicies": [
+    {
+      "tokenId": "3a6b94b5-d20e-40bd-a7cc-521f5c79fab3",
+      "policies": [
+        {"domain": "example.com", "subname": null, "type": null, "permWrite": true},
+        {"domain": "example.org", "subname": null, "type": null, "permWrite": true}
       ]
     }
   ]
