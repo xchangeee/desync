@@ -75,6 +75,7 @@ Shows what changes would be made without touching anything.
 ```sh
 desync plan
 desync plan -f prod.json
+desync plan -f -          # read state from stdin
 ```
 
 Example output:
@@ -103,13 +104,14 @@ Runs `plan`, then prompts for confirmation before making any API calls.
 desync apply
 desync apply -auto-approve    # skip confirmation (useful in CI)
 desync apply -f prod.json
+desync apply -f -             # read state from stdin
 ```
 
 ---
 
 ### `tokens list`
 
-Lists all tokens in your account with their UUIDs. Use this to find the `tokenId` to reference in your state file.
+Lists all tokens in your account with their UUIDs, then prints the policies for each token that has any. Use this to find the `tokenId` to reference in your state file.
 
 ```sh
 desync tokens list
@@ -118,6 +120,11 @@ desync tokens list
 ```
 ID                                    NAME       CREATED               LAST USED             VALID  PERM_CREATE  PERM_DELETE  PERM_MGMT
 3a6b94b5-d20e-40bd-a7cc-521f5c79fab3  ci-deploy  2024-01-15T10:00:00Z  2024-03-01T08:12:00Z  true   false        false        false
+
+Policies for ci-deploy (3a6b94b5-d20e-40bd-a7cc-521f5c79fab3):
+  DOMAIN       SUBNAME  TYPE  PERM_WRITE
+  *            *        *     false
+  example.com  *        *     true
 ```
 
 ---
