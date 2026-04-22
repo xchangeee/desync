@@ -11,6 +11,10 @@
 //
 // Subcommands:
 //
+//	init           Bootstrap a state file from the current API contents.
+//
+// Subcommands:
+//
 //	plan           Show what changes would be made without applying them.
 //	apply          Apply changes (prompts for confirmation; use -auto-approve to skip).
 //	tokens list    List all tokens in the account with their IDs and metadata.
@@ -41,6 +45,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -76,6 +81,8 @@ func run(args []string) error {
 	}
 
 	switch sub[0] {
+	case "init":
+		return runInit(*token, *file, sub[1:])
 	case "plan":
 		return runPlan(*token, *file, sub[1:])
 	case "apply":
@@ -86,6 +93,46 @@ func run(args []string) error {
 		printUsage()
 		return fmt.Errorf("unknown subcommand %q", sub[0])
 	}
+}
+
+// ---- init ------------------------------------------------------------------
+
+func runInit(token, file string, args []string) error {
+	fs := flag.NewFlagSet("init", flag.ContinueOnError)
+	force := fs.Bool("force", false, "overwrite existing state file")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if token == "" {
+		return fmt.Errorf("API token required: use -token or set DESEC_TOKEN")
+	}
+
+	if !*force {
+		if _, err := os.Stat(file); err == nil {
+			return fmt.Errorf("%s already exists; use -force to overwrite", file)
+		}
+	}
+
+	fmt.Println("Fetching current state from API...")
+	client := api.NewClient(token)
+	cfg, err := engine.FetchState(client)
+	if err != nil {
+		return fmt.Errorf("fetching state: %w", err)
+	}
+
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+
+	if err := os.WriteFile(file, data, 0o600); err != nil {
+		return fmt.Errorf("writing %s: %w", file, err)
+	}
+
+	fmt.Printf("Wrote %s (%d token policy groups, %d rrsets).\n",
+		file, len(cfg.TokenPolicies), len(cfg.RRsets))
+	return nil
 }
 
 // ---- plan ------------------------------------------------------------------
@@ -263,6 +310,7 @@ Global flags:
   -f    FILE     state file (default: desync.json)
 
 Subcommands:
+  init [-force]              Bootstrap state file from current API contents
   plan                       Show planned changes without applying them
   apply [-auto-approve]      Apply changes (prompts unless -auto-approve)
   tokens list                List all tokens with their IDs
