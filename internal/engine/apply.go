@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"sort"
 
 	"codeberg.org/xchangeee/desync/internal/api"
 	"codeberg.org/xchangeee/desync/internal/config"
@@ -56,33 +55,45 @@ func applyPolicies(tokenID string, diffs []PolicyDiff, desired []config.Policy, 
 	isDefault := func(p PolicyDiff) bool {
 		return p.Domain == nil && p.Subname == nil && p.Type == nil
 	}
-	kindRank := func(k ChangeKind) int {
-		switch k {
+
+	// The deSEC API enforces strict ordering:
+	//   - the default policy must be created before any specific policies
+	//   - all specific policies must be deleted before the default policy
+	// Build an explicitly ordered slice instead of relying on a sort comparator.
+	var (
+		defaultCreates  []PolicyDiff
+		specificCreates []PolicyDiff
+		updates         []PolicyDiff
+		specificDeletes []PolicyDiff
+		defaultDeletes  []PolicyDiff
+	)
+	for _, pd := range diffs {
+		switch pd.Kind {
 		case ChangeCreate:
-			return 0
+			if isDefault(pd) {
+				defaultCreates = append(defaultCreates, pd)
+			} else {
+				specificCreates = append(specificCreates, pd)
+			}
 		case ChangeUpdate:
-			return 1
+			updates = append(updates, pd)
 		case ChangeDelete:
-			return 2
+			if isDefault(pd) {
+				defaultDeletes = append(defaultDeletes, pd)
+			} else {
+				specificDeletes = append(specificDeletes, pd)
+			}
 		}
-		return 3
 	}
-	sort.SliceStable(diffs, func(i, j int) bool {
-		pi, pj := diffs[i], diffs[j]
-		if pi.Kind != pj.Kind {
-			return kindRank(pi.Kind) < kindRank(pj.Kind)
-		}
-		if pi.Kind == ChangeCreate {
-			return isDefault(pi) && !isDefault(pj)
-		}
-		if pi.Kind == ChangeDelete {
-			return !isDefault(pi) && isDefault(pj)
-		}
-		return false
-	})
+	ordered := make([]PolicyDiff, 0, len(diffs))
+	ordered = append(ordered, defaultCreates...)
+	ordered = append(ordered, specificCreates...)
+	ordered = append(ordered, updates...)
+	ordered = append(ordered, specificDeletes...)
+	ordered = append(ordered, defaultDeletes...)
 
 	fmt.Printf("Reconciling policies for token %s...\n", tokenID)
-	for _, pd := range diffs {
+	for _, pd := range ordered {
 		k := key(pd.Domain, pd.Subname, pd.Type)
 		label := fmt.Sprintf("{domain=%s subname=%s type=%s}", ptrStr(pd.Domain), ptrStr(pd.Subname), ptrStr(pd.Type))
 		fields := api.TokenPolicyWriteFields{

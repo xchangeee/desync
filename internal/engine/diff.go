@@ -127,10 +127,28 @@ func diffTokenPolicies(desired []config.TokenPolicies, client *api.Client) ([]To
 		}
 		diffs = append(diffs, TokenPoliciesDiff{
 			TokenID:  tp.TokenID,
-			Policies: planPolicies(tp.Policies, current),
+			Policies: planPolicies(withImplicitDefault(tp.Policies), current),
 		})
 	}
 	return diffs, nil
+}
+
+// withImplicitDefault ensures the policy list always contains a default policy
+// (domain/subname/type all null, perm_write false). If the caller already
+// declared one explicitly it is left unchanged; otherwise one is prepended so
+// that the deSEC API ordering constraint is always satisfied without requiring
+// the user to spell it out.
+func withImplicitDefault(policies []config.Policy) []config.Policy {
+	for _, p := range policies {
+		if p.Domain == nil && p.Subname == nil && p.Type == nil {
+			return policies // explicit default present
+		}
+	}
+	if len(policies) == 0 {
+		return policies // no policies at all — nothing to protect
+	}
+	implicit := config.Policy{Domain: nil, Subname: nil, Type: nil, PermWrite: false}
+	return append([]config.Policy{implicit}, policies...)
 }
 
 func planPolicies(desired []config.Policy, current []api.TokenPolicy) []PolicyDiff {
@@ -249,8 +267,8 @@ func diffDomains(desired []config.Domain, client *api.Client) ([]DomainDiff, err
 			}
 		}
 
-		for _, cr := range current {
-			if !desiredKeys[rrKey{cr.Subname, cr.Type}] {
+		for k, cr := range curByKey {
+			if !desiredKeys[k] {
 				changes = append(changes, RRsetDiff{
 					Kind:    ChangeDelete,
 					Subname: cr.Subname,
