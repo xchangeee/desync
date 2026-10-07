@@ -1,0 +1,10 @@
+{
+    // Keep hard tabs in fenced code (cue fmt / gofmt use tabs)
+    "MD010": {
+        "code_blocks": false
+    },
+    // Paragraphs are one line each; no hard wrapping
+    "MD013": false,
+    // Content tabs (=== "CUE") indent their fences, which MD046 misreads as indented code
+    "MD046": false
+}
