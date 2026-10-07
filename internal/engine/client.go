@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"codeberg.org/xchangeee/desync/internal/api"
+	"github.com/xchangeee/desync/internal/api"
 )
 
 // Client is the subset of the deSEC API used by the engine. The real

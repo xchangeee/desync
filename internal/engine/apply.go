@@ -3,8 +3,8 @@ package engine
 import (
 	"fmt"
 
-	"codeberg.org/xchangeee/desync/internal/api"
-	"codeberg.org/xchangeee/desync/internal/config"
+	"github.com/xchangeee/desync/internal/api"
+	"github.com/xchangeee/desync/internal/config"
 )
 
 // Apply executes the changes described in d against the API.

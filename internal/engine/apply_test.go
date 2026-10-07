@@ -3,9 +3,9 @@ package engine_test
 import (
 	"testing"
 
-	"codeberg.org/xchangeee/desync/internal/api"
-	"codeberg.org/xchangeee/desync/internal/config"
-	"codeberg.org/xchangeee/desync/internal/engine"
+	"github.com/xchangeee/desync/internal/api"
+	"github.com/xchangeee/desync/internal/config"
+	"github.com/xchangeee/desync/internal/engine"
 )
 
 // TestApply_PolicyOrdering verifies that when a token has no current policies
@@ -109,7 +109,7 @@ func TestApply_RRsetBulkPatch(t *testing.T) {
 	var patchedItems []api.RRsetWriteFields
 
 	current := []api.RRset{
-		{Subname: "www", Type: "A", TTL: 3600, Records: []string{"1.2.3.4"}},  // update records
+		{Subname: "www", Type: "A", TTL: 3600, Records: []string{"1.2.3.4"}}, // update records
 		{Subname: "old", Type: "CNAME", TTL: 3600, Records: []string{"x."}},  // delete
 	}
 	stub := &stubClient{

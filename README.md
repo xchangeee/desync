@@ -16,13 +16,13 @@ Define your desired state in a JSON file, then use `plan` to preview changes and
 ## Installation
 
 ```sh
-go install codeberg.org/xchangeee/desync/cmd/desync@latest
+go install github.com/xchangeee/desync/cmd/desync@latest
 ```
 
 Or build from source:
 
 ```sh
-git clone https://codeberg.org/xchangeee/desync
+git clone https://github.com/xchangeee/desync
 cd desync
 make build-bin
 ```

@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/afero"
 
-	"codeberg.org/xchangeee/desync/internal/config"
+	"github.com/xchangeee/desync/internal/config"
 )
 
 func TestLoadReader(t *testing.T) {

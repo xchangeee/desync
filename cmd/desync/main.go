@@ -59,9 +59,9 @@ import (
 
 	"github.com/spf13/afero"
 
-	"codeberg.org/xchangeee/desync/internal/api"
-	"codeberg.org/xchangeee/desync/internal/config"
-	"codeberg.org/xchangeee/desync/internal/engine"
+	"github.com/xchangeee/desync/internal/api"
+	"github.com/xchangeee/desync/internal/config"
+	"github.com/xchangeee/desync/internal/engine"
 )
 
 func main() {

@@ -6,9 +6,10 @@ package engine
 import (
 	"fmt"
 	"sort"
+	"strings"
 
-	"codeberg.org/xchangeee/desync/internal/api"
-	"codeberg.org/xchangeee/desync/internal/config"
+	"github.com/xchangeee/desync/internal/api"
+	"github.com/xchangeee/desync/internal/config"
 )
 
 // managedByDesec lists record types controlled exclusively by deSEC that
@@ -316,12 +317,13 @@ func joinStrs(ss []string) string {
 	}
 	cp := append([]string(nil), ss...)
 	sort.Strings(cp)
-	out := "["
+	var out strings.Builder
+	out.WriteString("[")
 	for i, s := range cp {
 		if i > 0 {
-			out += ", "
+			out.WriteString(", ")
 		}
-		out += s
+		out.WriteString(s)
 	}
-	return out + "]"
+	return out.String() + "]"
 }

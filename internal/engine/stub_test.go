@@ -1,7 +1,7 @@
 package engine_test
 
 import (
-	"codeberg.org/xchangeee/desync/internal/api"
+	"github.com/xchangeee/desync/internal/api"
 )
 
 // stubClient implements engine.Client with function fields so each test can
@@ -75,4 +75,5 @@ func (s *stubClient) CreateToken(f api.TokenWriteFields) (*api.Token, error) {
 
 // helpers
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }

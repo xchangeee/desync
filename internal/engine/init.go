@@ -3,7 +3,7 @@ package engine
 import (
 	"fmt"
 
-	"codeberg.org/xchangeee/desync/internal/config"
+	"github.com/xchangeee/desync/internal/config"
 )
 
 const defaultTTL = 3600

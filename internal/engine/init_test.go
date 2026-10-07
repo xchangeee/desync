@@ -3,8 +3,8 @@ package engine_test
 import (
 	"testing"
 
-	"codeberg.org/xchangeee/desync/internal/api"
-	"codeberg.org/xchangeee/desync/internal/engine"
+	"github.com/xchangeee/desync/internal/api"
+	"github.com/xchangeee/desync/internal/engine"
 )
 
 func TestFetchState_TokensWithoutPoliciesSkipped(t *testing.T) {
