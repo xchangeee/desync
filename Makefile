@@ -15,6 +15,7 @@ test:
 	go test ./...
 
 coverage:
+	mkdir -p build
 	go test -coverprofile=build/coverage.out ./...
 	go tool cover -html=build/coverage.out -o build/coverage.html
 	@echo "Coverage report generated: build/coverage.html"

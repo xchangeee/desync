@@ -1,7 +1,7 @@
 // Package api provides a rate-limit-aware HTTP client for the deSEC REST API.
 // It is the single entry point for all network I/O: every operation in this
 // package routes through do(), which transparently retries on HTTP 429
-// responses and honours the Retry-After header.
+// responses and honors the Retry-After header.
 package api
 
 import (
@@ -65,7 +65,7 @@ func (c *Client) do(method, url string, body []byte) (*http.Response, error) {
 		if err != nil {
 			return nil, err
 		}
-		if resp.StatusCode != 429 {
+		if resp.StatusCode != http.StatusTooManyRequests {
 			return resp, nil
 		}
 
@@ -128,7 +128,7 @@ func (c *Client) listAll(path string, out any) error {
 		}
 
 		// The server signals "pagination required" via 400 + Link: first.
-		if firstAttempt && resp.StatusCode == 400 {
+		if firstAttempt && resp.StatusCode == http.StatusBadRequest {
 			link := resp.Header.Get("Link")
 			resp.Body.Close()
 			m := reLinkFirst.FindStringSubmatch(link)
@@ -140,16 +140,15 @@ func (c *Client) listAll(path string, out any) error {
 			continue
 		}
 
-		if resp.StatusCode != 200 {
+		if resp.StatusCode != http.StatusOK {
 			b, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			return fmt.Errorf("GET %s: %s: %s", path, resp.Status, b)
 		}
 
 		var page []json.RawMessage
-		link := ""
 		err = json.NewDecoder(resp.Body).Decode(&page)
-		link = resp.Header.Get("Link")
+		link := resp.Header.Get("Link")
 		resp.Body.Close()
 		if err != nil {
 			return fmt.Errorf("decoding list from GET %s: %w", path, err)

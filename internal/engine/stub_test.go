@@ -72,8 +72,3 @@ func (s *stubClient) CreateToken(f api.TokenWriteFields) (*api.Token, error) {
 	}
 	return &api.Token{}, nil
 }
-
-// helpers
-
-//go:fix inline
-func strPtr(s string) *string { return new(s) }

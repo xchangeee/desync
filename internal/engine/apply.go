@@ -10,7 +10,7 @@ import (
 // Apply executes the changes described in d against the API.
 // Resources are processed in dependency order:
 //  1. Token policies
-//  2. RRsets (bulk-patched per domain to minimise rate-limit consumption)
+//  2. RRsets (bulk-patched per domain to minimize rate-limit consumption)
 func Apply(d *DiffResult, cfg *config.Config, client Client) error {
 	desiredByToken := make(map[string][]config.Policy)
 	for _, tp := range cfg.TokenPolicies {

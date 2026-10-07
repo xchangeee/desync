@@ -204,7 +204,7 @@ func runApply(token, file string, args []string) error {
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		if strings.TrimSpace(scanner.Text()) != "yes" {
-			fmt.Println("Apply cancelled.")
+			fmt.Println("Apply canceled.")
 			return nil
 		}
 	}
