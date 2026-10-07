@@ -2,8 +2,6 @@ package tools
 
 import (
 	"encoding/json"
-	"list"
-	"strings"
 
 	"github.com/xchangeee/desync/schema/core@v0"
 )
@@ -14,12 +12,12 @@ import (
 	X1="in": core.#Desec
 	_out: core.#Desync & {
 		domains: [
-			for k, v in desec.domains {
+			for k, v in X1.domains {
 				core.#Domain & {name: k, rrsets: v}
 			},
 		]
 		tokenPolicies: [
-			for k, v in desec.tokenPolicies {
+			for k, v in X1.tokenPolicies {
 				core.#TokenPolicy & {tokenId: k, policies: v}
 			},
 		]
