@@ -15,11 +15,24 @@ Define your desired state in a JSON file, then use `plan` to preview changes and
 
 ## Installation
 
+### Prebuilt binaries
+
+Download the archive for your platform from the [latest release](https://github.com/xchangeee/desync/releases/latest).
+
+Extract it and put the `desync` binary somewhere on your `PATH`:
+
+```sh
+curl -sSfL https://github.com/xchangeee/desync/releases/latest/download/desync_<OS>_<ARCH>.tar.gz | tar -xz desync
+sudo mv desync /usr/local/bin/
+```
+
+### With Go
+
 ```sh
 go install github.com/xchangeee/desync/cmd/desync@latest
 ```
 
-Or build from source:
+### From source
 
 ```sh
 git clone https://github.com/xchangeee/desync
