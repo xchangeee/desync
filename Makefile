@@ -1,4 +1,4 @@
-.PHONY: deps check fmt test coverage build build-bin clean
+.PHONY: deps check fmt test schema coverage build build-bin clean
 
 deps:
 	go mod tidy
@@ -10,9 +10,17 @@ check:
 	go fix ./...
 	go vet ./...
 	golangci-lint run ./...
+	$(MAKE) schema
 
 test:
 	go test ./...
+
+# Checks formatting of the CUE schema, evaluates it and runs its tests in
+# test/schema; vet -c also fails on test cases that are left incomplete.
+schema:
+	cue fmt --check ./schema/... ./test/schema/
+	cue vet -c ./schema/...
+	cue vet -c ./test/schema/
 
 coverage:
 	mkdir -p build

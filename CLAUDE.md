@@ -10,6 +10,7 @@ This project uses a Makefile. Key targets:
 - `make fmt` — Format code
 - `make vet` — Run static analysis
 - `make test` — Run all tests
+- `make schema` — Check, vet and test the CUE schema (tests live in `test/schema`)
 - `make coverage` — Run all tests with coverage
 - `make clean` — Remove build artifacts
 
